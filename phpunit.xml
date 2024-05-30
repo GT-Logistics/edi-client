@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2023 GT Logistics.
+  -->
+
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd"
+         backupGlobals="false"
+         backupStaticAttributes="false"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+         convertErrorsToExceptions="true"
+         convertNoticesToExceptions="true"
+         convertWarningsToExceptions="true"
+         processIsolation="false"
+         stopOnFailure="false">
+  <coverage processUncoveredFiles="true">
+    <include>
+      <directory suffix=".php">./src</directory>
+    </include>
+  </coverage>
+  <testsuites>
+    <testsuite name="Feature">
+      <directory suffix="Test.php">./test/Feature</directory>
+    </testsuite>
+  </testsuites>
+  <php>
+    <env name="EDI_FTP_HOST" value="example.org"/>
+    <env name="EDI_FTP_PORT" value="2121"/>
+    <env name="EDI_FTP_USERNAME" value="user"/>
+    <env name="EDI_FTP_PASSWORD" value="pass"/>
+    <env name="EDI_FTP_INPUT_DIR" value="/to"/>
+    <env name="EDI_FTP_OUTPUT_DIR" value="/from"/>
+  </php>
+</phpunit>

@@ -1,0 +1,14 @@
+parameters:
+    level: 9
+    paths:
+        - src/
+    stubFiles:
+        - stub/X12.stub
+        - stub/ISA.stub
+        - stub/GS.stub
+        - stub/ST.stub
+        - stub/HL.stub
+        - stub/Segment.stub
+    excludePaths:
+        analyse:
+            - src/Bridge

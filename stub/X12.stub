@@ -1,0 +1,11 @@
+<?php
+
+namespace Uhin\X12Parser\EDI;
+
+use Uhin\X12Parser\EDI\Segments\ISA;
+
+class X12
+{
+    /** @var ISA[] */
+    public $ISA;
+}

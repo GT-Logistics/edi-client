@@ -1,0 +1,46 @@
+{
+    "name": "gtlogistics/edi-client",
+    "type": "library",
+    "license": "proprietary",
+    "autoload": {
+        "psr-4": {
+            "Gtlogistics\\EdiClient\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Gtlogistics\\EdiClient\\Test\\": "test/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Brandon Antonio Lorenzo",
+            "email": "bantonio@gtglobal.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "php": ">=7.4"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^3.8|^v8.18",
+        "phpunit/phpunit": "^8.5|^10.1",
+        "illuminate/support": "^5.8|^6.0|^7.0|^8.0|^9.0|^10.0",
+        "phpstan/phpstan": "^1.10",
+        "uhin/x12-parser": "^1.0"
+    },
+    "suggest": {
+        "ext-ftp": "To allow reading and write EDIs throught FTP",
+        "uhin/x12-parser": "To allow reading and write ANSI X12 EDIs"
+    },
+    "conflict": {
+        "uhin/x12-parser": "<1 | >=2"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Gtlogistics\\EdiClient\\Bridge\\Laravel\\EdiClientServiceProvider"
+            ]
+        }
+    }
+}
