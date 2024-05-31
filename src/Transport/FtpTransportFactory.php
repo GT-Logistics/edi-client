@@ -5,7 +5,6 @@ namespace Gtlogistics\EdiClient\Transport;
 use Gtlogistics\EdiClient\Exception\TransportException;
 use Safe\Exceptions\FtpException;
 
-use function \Safe\sprintf;
 use function \Safe\ftp_connect;
 use function \Safe\ftp_ssl_connect;
 use function \Safe\ftp_pasv;
@@ -38,7 +37,7 @@ class FtpTransportFactory
                 $outputDir,
             );
         } catch (FtpException $e) {
-            throw new TransportException(sprintf('Could not connect to FTP server in %s:%s', $host, $port), 0, $e);
+            throw new TransportException("Could not connect to FTP server in $host:$port", 0, $e);
         }
     }
 }

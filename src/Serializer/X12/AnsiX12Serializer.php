@@ -7,19 +7,17 @@ use Gtlogistics\EdiClient\Serializer\SerializerInterface;
 use Uhin\X12Parser\Parser\X12Parser;
 use Uhin\X12Parser\Serializer\X12Serializer;
 
-use function \Safe\sprintf;
-
 class AnsiX12Serializer implements SerializerInterface
 {
     /**
-     * @var array<string, AnsiX12EncoderInterface>
+     * @var iterable<AnsiX12EncoderInterface>
      */
-    private array $encoders;
+    private iterable $encoders;
 
     /**
-     * @param array<string, AnsiX12EncoderInterface> $encoders
+     * @param iterable<AnsiX12EncoderInterface> $encoders
      */
-    public function __construct(array $encoders)
+    public function __construct(iterable $encoders)
     {
         if (!class_exists(X12Parser::class)) {
             throw new \RuntimeException('Can not detect an X12 Parser, please execute "composer require uhin/x12-parser"');
@@ -46,10 +44,12 @@ class AnsiX12Serializer implements SerializerInterface
 
     private function getEncoder(string $code): AnsiX12EncoderInterface
     {
-        if (!isset($this->encoders[$code])) {
-            throw new \RuntimeException(sprintf('Unsupported EDI document %s, supported documents: %s', $code, implode(', ', array_keys($this->encoders))));
+        foreach ($this->encoders as $encoder) {
+            if ($encoder->supports($code)) {
+                return $encoder;
+            }
         }
 
-        return $this->encoders[$code];
+        throw new \RuntimeException("Unsupported EDI document $code");
     }
 }

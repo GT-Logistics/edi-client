@@ -10,4 +10,6 @@ interface AnsiX12EncoderInterface
     public function decode(X12 $edi): EdiInterface;
 
     public function encode(EdiInterface $edi): X12;
+
+    public function supports(string $code): bool;
 }

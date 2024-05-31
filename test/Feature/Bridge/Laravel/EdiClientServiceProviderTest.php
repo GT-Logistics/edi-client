@@ -10,7 +10,9 @@ use Gtlogistics\EdiClient\EdiClient;
 use Gtlogistics\EdiClient\Serializer\SerializerInterface;
 use Gtlogistics\EdiClient\Serializer\X12\AnsiX12Serializer;
 use Gtlogistics\EdiClient\Transport\FtpTransport;
+use Gtlogistics\EdiClient\Transport\FtpTransportFactory;
 use Gtlogistics\EdiClient\Transport\TransportInterface;
+use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase;
 
 class EdiClientServiceProviderTest extends TestCase
@@ -22,20 +24,12 @@ class EdiClientServiceProviderTest extends TestCase
         ];
     }
 
-    public function testRegister(): void
+    public function testDefaultRegister(): void
     {
-        $this->mock(FtpTransport::class);
-        $this->mock(AnsiX12Serializer::class);
-
-        self::assertSame('ftp', config('edi.transport'));
-        self::assertSame('X12', config('edi.standard'));
-        self::assertSame('example.org', config('edi.ftp.host'));
-        self::assertSame(2121, config('edi.ftp.port'));
-        self::assertSame('user', config('edi.ftp.username'));
-        self::assertSame('pass', config('edi.ftp.password'));
-        self::assertSame('/to', config('edi.ftp.input_dir'));
-        self::assertSame('/from', config('edi.ftp.output_dir'));
-        self::assertFalse(config('edi.ftp.ssl'));
+        $this->mock(FtpTransportFactory::class)
+            ->expects('build')->once()
+            ->withArgs(['example.org', 2121, 'user', 'pass', '/to', '/from', false])
+            ->andReturn($this->createMock(FtpTransport::class));
 
         $transport = $this->app->make(TransportInterface::class);
         self::assertInstanceOf(FtpTransport::class, $transport);

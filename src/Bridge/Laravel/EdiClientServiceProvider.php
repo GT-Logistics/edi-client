@@ -8,14 +8,13 @@ namespace Gtlogistics\EdiClient\Bridge\Laravel;
 use Gtlogistics\EdiClient\EdiClient;
 use Gtlogistics\EdiClient\Serializer\SerializerInterface;
 use Gtlogistics\EdiClient\Serializer\X12\AnsiX12Serializer;
+use Gtlogistics\EdiClient\Transport\AdapterTransport;
 use Gtlogistics\EdiClient\Transport\FtpTransport;
+use Gtlogistics\EdiClient\Transport\FtpTransportFactory;
 use Gtlogistics\EdiClient\Transport\TransportInterface;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 use Psr\Http\Client\ClientInterface;
-use Psr\Http\Message\RequestFactoryInterface;
-use Psr\Http\Message\StreamFactoryInterface;
-use Psr\Http\Message\UriFactoryInterface;
 
 class EdiClientServiceProvider extends ServiceProvider
 {
@@ -26,7 +25,7 @@ class EdiClientServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__ . '/config/config.php' => config_path('extensiv.php'),
+                __DIR__ . '/config/config.php' => config_path('edi.php'),
             ], 'config');
         }
     }
@@ -40,7 +39,8 @@ class EdiClientServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__ . '/config/config.php', 'edi');
 
         // Register transports
-        $this->app->singleton(FtpTransport::class, static fn() => FtpTransport::build(
+        $this->app->singleton(FtpTransportFactory::class);
+        $this->app->singleton(FtpTransport::class, static fn(Application $app) => $app->make(FtpTransportFactory::class)->build(
             config('edi.ftp.host'),
             config('edi.ftp.port'),
             config('edi.ftp.username'),
@@ -51,7 +51,9 @@ class EdiClientServiceProvider extends ServiceProvider
         ));
 
         // Register serializers
-        $this->app->singleton(AnsiX12Serializer::class);
+        $this->app->singleton(AnsiX12Serializer::class, static function (Application $app) {
+            return new AnsiX12Serializer($app->tagged('edi.serializer'));
+        });
 
         // Register services
         $this->app->singleton(TransportInterface::class, static function (Application $app) {
@@ -61,7 +63,7 @@ class EdiClientServiceProvider extends ServiceProvider
                 return $app->make(FtpTransport::class);
             }
 
-            throw new \Exception(sprintf('The transport %s is not supported. Supported values are \'ftp\'', $transport));
+            throw new \RuntimeException(sprintf('The transport %s is not supported. Supported values are \'ftp\'', $transport));
         });
         $this->app->singleton(SerializerInterface::class, static function (Application $app) {
             $standard = config('edi.standard');
@@ -70,7 +72,7 @@ class EdiClientServiceProvider extends ServiceProvider
                 return $app->make(AnsiX12Serializer::class);
             }
 
-            throw new \Exception(sprintf('The standard %s is not supported. Supported values are \'X12\'', $standard));
+            throw new \RuntimeException(sprintf('The standard %s is not supported. Supported values are \'X12\'', $standard));
         });
         $this->app->singleton(EdiClient::class);
     }

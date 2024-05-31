@@ -7,7 +7,6 @@ use Safe\Exceptions\FilesystemException;
 use Safe\Exceptions\FtpException;
 use Safe\Exceptions\StreamException;
 
-use function \Safe\sprintf;
 use function \Safe\fopen;
 use function \Safe\fwrite;
 use function \Safe\ftp_nlist;
@@ -45,25 +44,16 @@ class FtpTransport implements TransportInterface
         $this->outputDir = $outputDir;
     }
 
-    public function getFiles(): array
+    public function getFileNames(): array
     {
         try {
-            $filenames = ftp_nlist($this->connection, $this->inputDir);
-
-            return array_map(
-                fn(string $filename) => new FtpFile($this, $this->inputDir . '/' . $filename),
-                $filenames
-            );
+            return ftp_nlist($this->connection, $this->inputDir);
         } catch (FtpException $e) {
-            throw new TransportException(sprintf('Could not list files from folder %s', $this->inputDir), 0, $e);
+            throw new TransportException("Could not list files from folder $this->inputDir", 0, $e);
         }
     }
 
-
-    /**
-     * @internal
-     */
-    public function getFileContent(string $filename): string
+    public function getFileContents(string $filename): string
     {
         try {
             $stream = fopen('php://memory', 'rb+');
@@ -73,22 +63,22 @@ class FtpTransport implements TransportInterface
 
             return stream_get_contents($stream);
         } catch (FtpException|FilesystemException|StreamException $e) {
-            throw new TransportException(sprintf('Could not read file %s', $filename), 0, $e);
+            throw new TransportException("Could not read file $filename", 0, $e);
         }
     }
 
-    public function writeFile(FileInterface $file): void
+    public function putFileContents(string $filename, string $data): void
     {
         try {
             ftp_chdir($this->connection, $this->outputDir);
 
             $stream = fopen('php://memory', 'rb+');
-            fwrite($stream, $file->getContent());
+            fwrite($stream, $data);
             fseek($stream, 0);
 
-            ftp_fput($this->connection, $this->outputDir . '/' . $file->getName(), $stream);
+            ftp_fput($this->connection, $this->outputDir . '/' . $filename, $stream);
         } catch (FtpException|FilesystemException $e) {
-            throw new TransportException(sprintf('Could not write the file %s in the folder %s, check if exists', $file->getName(), $this->outputDir), 0, $e);
+            throw new TransportException("Could not write the file $filename in the folder $this->outputDir, check if exists", 0, $e);
         }
     }
 

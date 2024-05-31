@@ -2,12 +2,24 @@
 
 namespace Gtlogistics\EdiClient\Transport;
 
+use Gtlogistics\EdiClient\Exception\TransportException;
+
 interface TransportInterface
 {
     /**
-     * @return FileInterface[]
+     * @return string[]
+     *
+     * @throws TransportException
      */
-    public function getFiles(): array;
+    public function getFileNames(): array;
 
-    public function writeFile(FileInterface $file): void;
+    /**
+     * @throws TransportException
+     */
+    public function getFileContents(string $filename): string;
+
+    /**
+     * @throws TransportException
+     */
+    public function putFileContents(string $filename, string $data): void;
 }
