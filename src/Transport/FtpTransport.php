@@ -2,13 +2,25 @@
 
 namespace Gtlogistics\EdiClient\Transport;
 
-use FTP\Connection;
 use Gtlogistics\EdiClient\Exception\TransportException;
+use Safe\Exceptions\FilesystemException;
+use Safe\Exceptions\FtpException;
+use Safe\Exceptions\StreamException;
+
+use function \Safe\sprintf;
+use function \Safe\fopen;
+use function \Safe\fwrite;
+use function \Safe\ftp_nlist;
+use function \Safe\ftp_fget;
+use function \Safe\ftp_chdir;
+use function \Safe\ftp_fput;
+use function \Safe\ftp_close;
+use function \Safe\stream_get_contents;
 
 class FtpTransport implements TransportInterface
 {
     /**
-     * @var Connection
+     * @var resource
      */
     private $connection;
 
@@ -17,7 +29,7 @@ class FtpTransport implements TransportInterface
     private string $outputDir;
 
     /**
-     * @param Connection $connection
+     * @param resource $connection
      */
     public function __construct(
         $connection,
@@ -33,49 +45,18 @@ class FtpTransport implements TransportInterface
         $this->outputDir = $outputDir;
     }
 
-    /**
-     * @throws TransportException
-     */
-    public static function build(
-        string $host,
-        int $port,
-        string $username,
-        string $password,
-        string $inputDir,
-        string $outputDir,
-        bool $useSsl = false
-    ): self {
-        $connection = !$useSsl ? ftp_connect($host, $port) : ftp_ssl_connect($host, $port);
-
-        if (!$connection) {
-            throw new TransportException(sprintf('Could not connect to FTP server in %s:%s', $host, $port));
-        }
-
-        if(!ftp_pasv($connection, true)) {
-            throw new TransportException(sprintf('The FTP server at %s:%s could not support PASSIVE mode', $host, $port));
-        }
-
-        if(!@ftp_login($connection, $username, $password)) {
-            throw new TransportException(sprintf('Could not login to FTP server in %s:%s', $host, $port));
-        }
-
-        return new self(
-            $connection,
-            $inputDir,
-            $outputDir,
-        );
-    }
-
     public function getFiles(): array
     {
-        if(($filenames = ftp_nlist($this->connection, $this->inputDir)) === false) {
-            throw new TransportException(sprintf('Could not list files from folder %s', $this->inputDir));
-        }
+        try {
+            $filenames = ftp_nlist($this->connection, $this->inputDir);
 
-        return array_map(
-            fn(string $filename) => new FtpFile($this, $this->inputDir . '/' . $filename),
-            $filenames
-        );
+            return array_map(
+                fn(string $filename) => new FtpFile($this, $this->inputDir . '/' . $filename),
+                $filenames
+            );
+        } catch (FtpException $e) {
+            throw new TransportException(sprintf('Could not list files from folder %s', $this->inputDir), 0, $e);
+        }
     }
 
 
@@ -84,36 +65,38 @@ class FtpTransport implements TransportInterface
      */
     public function getFileContent(string $filename): string
     {
-        /** @var resource $stream */
-        $stream = fopen('php://memory', 'rb+');
-        ftp_fget($this->connection, $stream, $filename);
-        fseek($stream, 0);
+        try {
+            $stream = fopen('php://memory', 'rb+');
 
-        if (($data = stream_get_contents($stream)) === false) {
-            throw new TransportException(sprintf('Could not read file %s', $filename));
+            ftp_fget($this->connection, $stream, $filename);
+            fseek($stream, 0);
+
+            return stream_get_contents($stream);
+        } catch (FtpException|FilesystemException|StreamException $e) {
+            throw new TransportException(sprintf('Could not read file %s', $filename), 0, $e);
         }
-
-        return $data;
     }
 
     public function writeFile(FileInterface $file): void
     {
-        if(@ftp_chdir($this->connection, $this->outputDir)) {
-            throw new TransportException(sprintf('Could not change to the folder %s, check if exists', $this->outputDir));
-        }
+        try {
+            ftp_chdir($this->connection, $this->outputDir);
 
-        /** @var resource $stream */
-        $stream = fopen('php://memory', 'rb+');
-        fwrite($stream, $file->getContent());
-        fseek($stream, 0);
+            $stream = fopen('php://memory', 'rb+');
+            fwrite($stream, $file->getContent());
+            fseek($stream, 0);
 
-        if (!ftp_fput($this->connection, $this->outputDir . '/' . $file->getName(), $stream)) {
-            throw new TransportException(sprintf('Could not write the file %s in the folder %s, check if exists', $file->getName(), $this->outputDir));
+            ftp_fput($this->connection, $this->outputDir . '/' . $file->getName(), $stream);
+        } catch (FtpException|FilesystemException $e) {
+            throw new TransportException(sprintf('Could not write the file %s in the folder %s, check if exists', $file->getName(), $this->outputDir), 0, $e);
         }
     }
 
     public function __destruct()
     {
-        ftp_close($this->connection);
+        try {
+            ftp_close($this->connection);
+        } catch (FtpException $e) {
+        }
     }
 }

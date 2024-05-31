@@ -7,6 +7,8 @@ use Gtlogistics\EdiClient\Serializer\SerializerInterface;
 use Uhin\X12Parser\Parser\X12Parser;
 use Uhin\X12Parser\Serializer\X12Serializer;
 
+use function \Safe\sprintf;
+
 class AnsiX12Serializer implements SerializerInterface
 {
     /**
