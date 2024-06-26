@@ -48,8 +48,8 @@ class FtpTransportFactory
         try {
             $connection = !$useSsl ? ftp_connect($host, $port) : ftp_ssl_connect($host, $port);
 
-            ftp_pasv($connection, true);
             ftp_login($connection, $username, $password);
+            ftp_pasv($connection, true);
 
             return new FtpTransport(
                 $connection,

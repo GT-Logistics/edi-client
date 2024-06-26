@@ -29,7 +29,6 @@ use Safe\Exceptions\StreamException;
 use Webmozart\Assert\Assert;
 
 use function Safe\fopen;
-use function Safe\ftp_chdir;
 use function Safe\ftp_close;
 use function Safe\ftp_fget;
 use function Safe\ftp_fput;
@@ -61,15 +60,25 @@ class FtpTransport implements TransportInterface
         }
 
         $this->connection = $connection;
-        $this->inputDir = $inputDir;
-        $this->outputDir = $outputDir;
+        $this->inputDir = $this->normalizeDirPath($inputDir);
+        $this->outputDir = $this->normalizeDirPath($outputDir);
     }
 
     public function getFileNames(): array
     {
         Assert::notNull($this->connection);
         try {
-            return ftp_nlist($this->connection, $this->inputDir);
+            $files = [];
+            foreach (ftp_nlist($this->connection, $this->inputDir) as $file) {
+                $file = $this->normalizeFilePath($file);
+                if (in_array($file, ['.', '..'])) {
+                    continue;
+                }
+
+                $files[] = $file;
+            }
+
+            return $files;
         } catch (FtpException $e) {
             throw new TransportException("Could not list files from folder $this->inputDir", 0, $e);
         }
@@ -81,7 +90,7 @@ class FtpTransport implements TransportInterface
         try {
             $stream = fopen('php://memory', 'rb+');
 
-            ftp_fget($this->connection, $stream, $filename);
+            ftp_fget($this->connection, $stream, $this->inputDir . $filename);
             fseek($stream, 0);
 
             return stream_get_contents($stream);
@@ -94,13 +103,12 @@ class FtpTransport implements TransportInterface
     {
         Assert::notNull($this->connection);
         try {
-            ftp_chdir($this->connection, $this->outputDir);
-
             $stream = fopen('php://memory', 'rb+');
+
             fwrite($stream, $data);
             fseek($stream, 0);
 
-            ftp_fput($this->connection, $this->outputDir . '/' . $filename, $stream);
+            ftp_fput($this->connection, $this->outputDir . $filename, $stream);
         } catch (FtpException|FilesystemException $e) {
             throw new TransportException("Could not write the file $filename in the folder $this->outputDir, check if exists", 0, $e);
         }
@@ -118,5 +126,15 @@ class FtpTransport implements TransportInterface
             $this->connection = null;
         } catch (FtpException) {
         }
+    }
+
+    private function normalizeDirPath(string $dirPath): string
+    {
+        return rtrim($dirPath, '/\\') . '/';
+    }
+
+    private function normalizeFilePath(string $filePath): string
+    {
+        return str_replace($this->inputDir, '', $filePath);
     }
 }
