@@ -7,14 +7,15 @@ namespace Gtlogistics\EdiClient\Test\Feature\Bridge\Laravel;
 
 use Gtlogistics\EdiClient\Bridge\Laravel\EdiClientServiceProvider;
 use Gtlogistics\EdiClient\EdiClient;
+use Gtlogistics\EdiClient\Serializer\AnsiX12Serializer;
 use Gtlogistics\EdiClient\Serializer\SerializerInterface;
-use Gtlogistics\EdiClient\Serializer\X12\AnsiX12Serializer;
 use Gtlogistics\EdiClient\Transport\FtpTransport;
 use Gtlogistics\EdiClient\Transport\FtpTransportFactory;
 use Gtlogistics\EdiClient\Transport\TransportInterface;
-use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
 
+#[CoversClass(EdiClientServiceProvider::class)]
 class EdiClientServiceProviderTest extends TestCase
 {
     protected function getPackageProviders($app): array

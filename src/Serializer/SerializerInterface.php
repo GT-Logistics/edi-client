@@ -2,11 +2,18 @@
 
 namespace Gtlogistics\EdiClient\Serializer;
 
-use Gtlogistics\EdiClient\Model\EdiInterface;
-
+/**
+ * @template T
+ */
 interface SerializerInterface
 {
-    public function serialize(EdiInterface $edi): string;
+    /**
+     * @param T $edi
+     */
+    public function serialize(mixed $edi): string;
 
-    public function deserialize(string $content): EdiInterface;
+    /**
+     * @return T
+     */
+    public function deserialize(string $content): mixed;
 }

@@ -7,6 +7,7 @@ use Safe\Exceptions\FilesystemException;
 use Safe\Exceptions\FtpException;
 use Safe\Exceptions\StreamException;
 
+use Webmozart\Assert\Assert;
 use function \Safe\fopen;
 use function \Safe\fwrite;
 use function \Safe\ftp_nlist;
@@ -19,7 +20,7 @@ use function \Safe\stream_get_contents;
 class FtpTransport implements TransportInterface
 {
     /**
-     * @var resource
+     * @var resource|null
      */
     private $connection;
 
@@ -33,7 +34,7 @@ class FtpTransport implements TransportInterface
     public function __construct(
         $connection,
         string $inputDir,
-        string $outputDir
+        string $outputDir,
     ) {
         if (!extension_loaded('ftp')) {
             throw new \RuntimeException('You must have the FTP extension for PHP, please enable it in the php.ini file');
@@ -46,6 +47,7 @@ class FtpTransport implements TransportInterface
 
     public function getFileNames(): array
     {
+        Assert::notNull($this->connection);
         try {
             return ftp_nlist($this->connection, $this->inputDir);
         } catch (FtpException $e) {
@@ -55,6 +57,7 @@ class FtpTransport implements TransportInterface
 
     public function getFileContents(string $filename): string
     {
+        Assert::notNull($this->connection);
         try {
             $stream = fopen('php://memory', 'rb+');
 
@@ -69,6 +72,7 @@ class FtpTransport implements TransportInterface
 
     public function putFileContents(string $filename, string $data): void
     {
+        Assert::notNull($this->connection);
         try {
             ftp_chdir($this->connection, $this->outputDir);
 
@@ -84,9 +88,15 @@ class FtpTransport implements TransportInterface
 
     public function __destruct()
     {
+        if (!$this->connection) {
+            return;
+        }
+
         try {
             ftp_close($this->connection);
-        } catch (FtpException $e) {
+
+            $this->connection = null;
+        } catch (FtpException) {
         }
     }
 }

@@ -6,22 +6,41 @@ use Gtlogistics\EdiClient\Model\EdiInterface;
 use Gtlogistics\EdiClient\Serializer\SerializerInterface;
 use Gtlogistics\EdiClient\Transport\TransportInterface;
 
+/**
+ * @template T
+ */
 final class EdiClient
 {
-    private TransportInterface $transport;
-
-    private SerializerInterface $serializer;
-
+    /**
+     * @param SerializerInterface<T> $serializer
+     */
     public function __construct(
-        TransportInterface $transport,
-        SerializerInterface $serializer
+        private readonly TransportInterface $transport,
+        private readonly SerializerInterface $serializer,
     ) {
-        $this->transport = $transport;
-        $this->serializer = $serializer;
     }
 
-    public function send(EdiInterface $edi)
+    /**
+     * @param T $edi
+     */
+    public function send(string $filename, mixed $edi): void
     {
-        $this->transport->writeFile();
+        $this->transport->putFileContents($filename, $this->serializer->serialize($edi));
+    }
+
+    /**
+     * @return T
+     */
+    public function receive(string $filename): mixed
+    {
+        return $this->serializer->deserialize($this->transport->getFileContents($filename));
+    }
+
+    /**
+     * @return string[]
+     */
+    public function files(): array
+    {
+        return $this->transport->getFileNames();
     }
 }

@@ -19,7 +19,7 @@ class FtpTransportFactory
         string $password,
         string $inputDir,
         string $outputDir,
-        bool $useSsl = false
+        bool $useSsl = false,
     ): FtpTransport {
         if (!extension_loaded('ftp')) {
             throw new \RuntimeException('You must have the FTP extension for PHP, please enable it in the php.ini file');

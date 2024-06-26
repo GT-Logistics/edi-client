@@ -1,7 +1,0 @@
-<?php
-
-namespace Uhin\X12Parser\EDI\Segments;
-
-class Segment
-{
-}

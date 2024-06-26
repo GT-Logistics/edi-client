@@ -6,15 +6,13 @@
 namespace Gtlogistics\EdiClient\Bridge\Laravel;
 
 use Gtlogistics\EdiClient\EdiClient;
+use Gtlogistics\EdiClient\Serializer\AnsiX12Serializer;
 use Gtlogistics\EdiClient\Serializer\SerializerInterface;
-use Gtlogistics\EdiClient\Serializer\X12\AnsiX12Serializer;
-use Gtlogistics\EdiClient\Transport\AdapterTransport;
 use Gtlogistics\EdiClient\Transport\FtpTransport;
 use Gtlogistics\EdiClient\Transport\FtpTransportFactory;
 use Gtlogistics\EdiClient\Transport\TransportInterface;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
-use Psr\Http\Client\ClientInterface;
 
 class EdiClientServiceProvider extends ServiceProvider
 {
@@ -51,9 +49,11 @@ class EdiClientServiceProvider extends ServiceProvider
         ));
 
         // Register serializers
-        $this->app->singleton(AnsiX12Serializer::class, static function (Application $app) {
-            return new AnsiX12Serializer($app->tagged('edi.serializer'));
-        });
+        $this->app->singleton(AnsiX12Serializer::class, static fn (Application $app) => new AnsiX12Serializer(
+            iterator_to_array($app->tagged('edi.x12.releases')),
+            config('edi.x12.element-delimiter'),
+            config('edi.x12.segment-delimiter'),
+        ));
 
         // Register services
         $this->app->singleton(TransportInterface::class, static function (Application $app) {
@@ -63,16 +63,16 @@ class EdiClientServiceProvider extends ServiceProvider
                 return $app->make(FtpTransport::class);
             }
 
-            throw new \RuntimeException(sprintf('The transport %s is not supported. Supported values are \'ftp\'', $transport));
+            throw new \InvalidArgumentException(sprintf('The transport %s is not supported. Supported values are \'ftp\'', $transport));
         });
         $this->app->singleton(SerializerInterface::class, static function (Application $app) {
             $standard = config('edi.standard');
 
-            if ($standard === 'X12') {
+            if ($standard === 'x12') {
                 return $app->make(AnsiX12Serializer::class);
             }
 
-            throw new \RuntimeException(sprintf('The standard %s is not supported. Supported values are \'X12\'', $standard));
+            throw new \InvalidArgumentException(sprintf('The standard %s is not supported. Supported values are \'x12\'', $standard));
         });
         $this->app->singleton(EdiClient::class);
     }
