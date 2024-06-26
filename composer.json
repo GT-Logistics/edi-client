@@ -29,7 +29,8 @@
         "illuminate/support": "^9.0|^10.0|^11.0",
         "phpstan/phpstan": "^1.11.5",
         "thecodingmachine/phpstan-safe-rule": "^v1.2.0",
-        "gtlogistics/edi-x12": "dev-main"
+        "gtlogistics/edi-x12": "dev-main",
+        "friendsofphp/php-cs-fixer": "^3.59"
     },
     "suggest": {
         "ext-ftp": "To allow reading and write EDIs throught FTP",
