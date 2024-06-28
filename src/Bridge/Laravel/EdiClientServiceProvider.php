@@ -27,6 +27,7 @@ use Gtlogistics\EdiClient\Serializer\AnsiX12Serializer;
 use Gtlogistics\EdiClient\Serializer\SerializerInterface;
 use Gtlogistics\EdiClient\Transport\FtpTransport;
 use Gtlogistics\EdiClient\Transport\FtpTransportFactory;
+use Gtlogistics\EdiClient\Transport\LazyTransport;
 use Gtlogistics\EdiClient\Transport\TransportInterface;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
@@ -77,7 +78,7 @@ class EdiClientServiceProvider extends ServiceProvider
             $transport = config('edi.transport');
 
             if ($transport === 'ftp') {
-                return $app->make(FtpTransport::class);
+                return $app->make(LazyTransport::class, ['factory' => $app->factory(FtpTransport::class)]);
             }
 
             throw new \InvalidArgumentException(sprintf('The transport %s is not supported. Supported values are \'ftp\'', $transport));
