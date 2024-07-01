@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace Gtlogistics\EdiClient\Transport;
 
+use FTP\Connection;
 use Gtlogistics\EdiClient\Exception\TransportException;
 use Safe\Exceptions\FilesystemException;
 use Safe\Exceptions\FtpException;
@@ -38,27 +39,17 @@ use function Safe\stream_get_contents;
 
 class FtpTransport implements TransportInterface
 {
-    /**
-     * @var resource|null
-     */
-    private $connection;
+    private Connection $connection;
 
     private string $inputDir;
 
     private string $outputDir;
 
-    /**
-     * @param resource $connection
-     */
     public function __construct(
-        $connection,
+        Connection $connection,
         string $inputDir,
         string $outputDir,
     ) {
-        if (!extension_loaded('ftp')) {
-            throw new \RuntimeException('You must have the FTP extension for PHP, please enable it in the php.ini file');
-        }
-
         $this->connection = $connection;
         $this->inputDir = $this->normalizeDirPath($inputDir);
         $this->outputDir = $this->normalizeDirPath($outputDir);

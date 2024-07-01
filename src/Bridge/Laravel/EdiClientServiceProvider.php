@@ -23,16 +23,19 @@ declare(strict_types=1);
 namespace Gtlogistics\EdiClient\Bridge\Laravel;
 
 use Gtlogistics\EdiClient\EdiClient;
+use Gtlogistics\EdiClient\EdiClientFactory;
 use Gtlogistics\EdiClient\Serializer\AnsiX12Serializer;
+use Gtlogistics\EdiClient\Serializer\NullSerializer;
 use Gtlogistics\EdiClient\Serializer\SerializerInterface;
-use Gtlogistics\EdiClient\Transport\FtpTransport;
 use Gtlogistics\EdiClient\Transport\FtpTransportFactory;
-use Gtlogistics\EdiClient\Transport\LazyTransport;
+use Gtlogistics\EdiClient\Transport\NullTransport;
 use Gtlogistics\EdiClient\Transport\TransportInterface;
+use Gtlogistics\X12Parser\Model\ReleaseInterface;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
+use Webmozart\Assert\Assert;
 
-class EdiClientServiceProvider extends ServiceProvider
+final class EdiClientServiceProvider extends ServiceProvider
 {
     /**
      * Bootstrap the application services.
@@ -56,42 +59,61 @@ class EdiClientServiceProvider extends ServiceProvider
 
         // Register transports
         $this->app->singleton(FtpTransportFactory::class);
-        $this->app->singleton(FtpTransport::class, static fn (Application $app) => $app->make(FtpTransportFactory::class)->build(
-            config('edi.ftp.host'),
-            config('edi.ftp.port'),
-            config('edi.ftp.username'),
-            config('edi.ftp.password'),
-            config('edi.ftp.input_dir'),
-            config('edi.ftp.output_dir'),
-            config('edi.ftp.ssl'),
-        ));
+        $this->app->singleton('edi.transport.null', NullTransport::class);
+        $this->app->singleton('edi.transport.ftp', function (Application $app): TransportInterface {
+            $host = config('edi.ftp.host');
+            $port = config('edi.ftp.port');
+            $username = config('edi.ftp.username');
+            $password = config('edi.ftp.password');
+            $inputDir = config('edi.ftp.input_dir');
+            $outputDir = config('edi.ftp.output_dir');
+            $isSsl = config('edi.ftp.ssl');
+
+            Assert::string($host);
+            Assert::integer($port);
+            Assert::string($username);
+            Assert::string($password);
+            Assert::string($inputDir);
+            Assert::string($outputDir);
+            Assert::boolean($isSsl);
+
+            return $app->make(FtpTransportFactory::class)
+                ->build($host, $port, $username, $password, $inputDir, $outputDir, $isSsl)
+            ;
+        });
 
         // Register serializers
-        $this->app->singleton(AnsiX12Serializer::class, static fn (Application $app) => new AnsiX12Serializer(
-            iterator_to_array($app->tagged('edi.x12.releases')),
-            config('edi.x12.element-delimiter'),
-            config('edi.x12.segment-delimiter'),
-        ));
+        $this->app->singleton('edi.serializer.null', NullSerializer::class);
+        $this->app->singleton('edi.serializer.x12', static function (Application $app): SerializerInterface {
+            $releases = iterator_to_array($app->tagged('edi.x12.releases'));
+            $elementDelimiter = config('edi.x12.element-delimiter');
+            $segmentDelimiter = config('edi.x12.segment-delimiter');
+
+            Assert::allIsInstanceOf($releases, ReleaseInterface::class);
+            Assert::string($elementDelimiter);
+            Assert::string($segmentDelimiter);
+
+            return new AnsiX12Serializer($releases, $elementDelimiter, $segmentDelimiter);
+        });
 
         // Register services
         $this->app->singleton(TransportInterface::class, static function (Application $app) {
             $transport = config('edi.transport');
 
-            if ($transport === 'ftp') {
-                return $app->make(LazyTransport::class, ['factory' => $app->factory(FtpTransport::class)]);
-            }
+            Assert::string($transport);
+            Assert::inArray($transport, ['null', 'ftp']);
 
-            throw new \InvalidArgumentException(sprintf('The transport %s is not supported. Supported values are \'ftp\'', $transport));
+            return $app->make("edi.transport.$transport");
         });
         $this->app->singleton(SerializerInterface::class, static function (Application $app) {
             $standard = config('edi.standard');
 
-            if ($standard === 'x12') {
-                return $app->make(AnsiX12Serializer::class);
-            }
+            Assert::string($standard);
+            Assert::inArray($standard, ['null', 'x12']);
 
-            throw new \InvalidArgumentException(sprintf('The standard %s is not supported. Supported values are \'x12\'', $standard));
+            return $app->make("edi.serializer.$standard");
         });
+        $this->app->singleton(EdiClientFactory::class);
         $this->app->singleton(EdiClient::class);
     }
 }

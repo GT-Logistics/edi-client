@@ -40,11 +40,23 @@ class FtpTransportFactory
         string $inputDir,
         string $outputDir,
         bool $useSsl = false,
-    ): FtpTransport {
+    ): TransportInterface {
         if (!extension_loaded('ftp')) {
             throw new \RuntimeException('You must have the FTP extension for PHP, please enable it in the php.ini file');
         }
 
+        return new LazyTransport(fn () => $this->buildTransport($host, $port, $username, $password, $inputDir, $outputDir, $useSsl));
+    }
+
+    private function buildTransport(
+        string $host,
+        int $port,
+        string $username,
+        string $password,
+        string $inputDir,
+        string $outputDir,
+        bool $useSsl = false,
+    ): TransportInterface {
         try {
             $connection = !$useSsl ? ftp_connect($host, $port) : ftp_ssl_connect($host, $port);
 
