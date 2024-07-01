@@ -39,7 +39,7 @@ use function Safe\stream_get_contents;
 
 class FtpTransport implements TransportInterface
 {
-    private Connection $connection;
+    private ?Connection $connection;
 
     private string $inputDir;
 
