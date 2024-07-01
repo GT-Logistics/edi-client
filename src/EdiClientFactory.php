@@ -47,7 +47,6 @@ use Gtlogistics\EdiClient\Transport\FtpTransportFactory;
 use Gtlogistics\EdiClient\Transport\NullTransport;
 use Gtlogistics\EdiClient\Transport\TransportInterface;
 use Gtlogistics\X12Parser\Model\ReleaseInterface;
-use Webmozart\Assert\Assert;
 
 final class EdiClientFactory
 {
@@ -106,9 +105,6 @@ final class EdiClientFactory
 
     public function build(): EdiClient
     {
-        Assert::notNull($this->transport);
-        Assert::notNull($this->serializer);
-
         return new EdiClient($this->transport, $this->serializer);
     }
 }
