@@ -43,7 +43,7 @@ namespace Gtlogistics\EdiClient\Transport\Sftp;
 interface SftpAuthenticatorInterface
 {
     /**
-     * @param resource $sshConnection
+     * @param resource $connection
      */
-    public function authenticate($sshConnection): void;
+    public function authenticate($connection): void;
 }

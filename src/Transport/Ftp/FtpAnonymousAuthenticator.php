@@ -38,24 +38,21 @@ declare(strict_types=1);
  * USA
  */
 
-namespace Gtlogistics\EdiClient\Transport\Sftp;
+namespace Gtlogistics\EdiClient\Transport\Ftp;
 
-use Gtlogistics\EdiClient\Utils\CustomAssert;
+use FTP\Connection;
 
-use function Safe\ssh2_auth_password;
-
-final class SftpPasswordAuthenticator implements SftpAuthenticatorInterface
+final class FtpAnonymousAuthenticator implements FtpAuthenticatorInterface
 {
+    private FtpPasswordAuthenticator $delegated;
+
     public function __construct(
-        private readonly string $username,
-        private readonly string $password,
     ) {
+        $this->delegated = new FtpPasswordAuthenticator('anonymous', 'guest');
     }
 
-    public function authenticate($connection): void
+    public function authenticate(Connection $connection): void
     {
-        CustomAssert::ssh2Resource($connection);
-
-        ssh2_auth_password($connection, $this->username, $this->password);
+        $this->delegated->authenticate($connection);
     }
 }

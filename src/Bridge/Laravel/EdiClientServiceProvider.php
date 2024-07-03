@@ -27,8 +27,9 @@ use Gtlogistics\EdiClient\EdiClientFactory;
 use Gtlogistics\EdiClient\Serializer\AnsiX12Serializer;
 use Gtlogistics\EdiClient\Serializer\NullSerializer;
 use Gtlogistics\EdiClient\Serializer\SerializerInterface;
-use Gtlogistics\EdiClient\Transport\FtpTransportFactory;
+use Gtlogistics\EdiClient\Transport\Ftp\FtpTransportFactory;
 use Gtlogistics\EdiClient\Transport\NullTransport;
+use Gtlogistics\EdiClient\Transport\Sftp\SftpTransportFactory;
 use Gtlogistics\EdiClient\Transport\TransportInterface;
 use Gtlogistics\EdiX12\Model\ReleaseInterface;
 use Illuminate\Contracts\Foundation\Application;
@@ -59,6 +60,7 @@ final class EdiClientServiceProvider extends ServiceProvider
 
         // Register transports
         $this->app->singleton(FtpTransportFactory::class);
+        $this->app->singleton(SftpTransportFactory::class);
         $this->app->singleton('edi.transport.null', NullTransport::class);
         $this->app->singleton('edi.transport.ftp', function (Application $app): TransportInterface {
             $host = config('edi.ftp.host');
@@ -77,8 +79,35 @@ final class EdiClientServiceProvider extends ServiceProvider
             Assert::string($outputDir);
             Assert::boolean($isSsl);
 
-            return $app->make(FtpTransportFactory::class)
-                ->build($host, $port, $username, $password, $inputDir, $outputDir, $isSsl)
+            /** @var FtpTransportFactory $factory */
+            $factory = $app->make(FtpTransportFactory::class);
+
+            return $factory
+                ->withPasswordAuthentication($username, $password)
+                ->build($host, $port, $inputDir, $outputDir, $isSsl)
+            ;
+        });
+        $this->app->singleton('edi.transport.sftp', function (Application $app): TransportInterface {
+            $host = config('edi.sftp.host');
+            $port = config('edi.sftp.port');
+            $username = config('edi.sftp.username');
+            $password = config('edi.sftp.password');
+            $inputDir = config('edi.sftp.input_dir');
+            $outputDir = config('edi.sftp.output_dir');
+
+            Assert::string($host);
+            Assert::integer($port);
+            Assert::string($username);
+            Assert::string($password);
+            Assert::string($inputDir);
+            Assert::string($outputDir);
+
+            /** @var SftpTransportFactory $factory */
+            $factory = $app->make(SftpTransportFactory::class);
+
+            return $factory
+                ->withPasswordAuthentication($username, $password)
+                ->build($host, $port, $inputDir, $outputDir)
             ;
         });
 
@@ -101,7 +130,7 @@ final class EdiClientServiceProvider extends ServiceProvider
             $transport = config('edi.transport');
 
             Assert::string($transport);
-            Assert::inArray($transport, ['null', 'ftp']);
+            Assert::inArray($transport, ['null', 'ftp', 'sftp']);
 
             return $app->make("edi.transport.$transport");
         });

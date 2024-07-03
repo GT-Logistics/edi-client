@@ -20,10 +20,11 @@
 
 declare(strict_types=1);
 
-namespace Gtlogistics\EdiClient\Transport;
+namespace Gtlogistics\EdiClient\Transport\Ftp;
 
 use FTP\Connection;
 use Gtlogistics\EdiClient\Exception\TransportException;
+use Gtlogistics\EdiClient\Transport\TransportInterface;
 use Gtlogistics\EdiClient\Utils\PathUtils;
 use Safe\Exceptions\FilesystemException;
 use Safe\Exceptions\FtpException;

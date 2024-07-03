@@ -43,7 +43,6 @@ namespace Gtlogistics\EdiClient;
 use Gtlogistics\EdiClient\Serializer\AnsiX12Serializer;
 use Gtlogistics\EdiClient\Serializer\NullSerializer;
 use Gtlogistics\EdiClient\Serializer\SerializerInterface;
-use Gtlogistics\EdiClient\Transport\FtpTransportFactory;
 use Gtlogistics\EdiClient\Transport\NullTransport;
 use Gtlogistics\EdiClient\Transport\TransportInterface;
 use Gtlogistics\EdiX12\Model\ReleaseInterface;
@@ -64,30 +63,19 @@ final class EdiClientFactory
 
     public function withNullTransport(): self
     {
-        $this->transport = new NullTransport();
-
-        return $this;
+        return $this->withTransport(new NullTransport());
     }
 
-    public function withFtpTransport(
-        string $host,
-        int $port,
-        string $username,
-        string $password,
-        string $inputDir,
-        string $outputDir,
-        bool $useSsl = false,
-    ): self {
-        $this->transport = (new FtpTransportFactory())->build($host, $port, $username, $password, $inputDir, $outputDir, $useSsl);
+    public function withTransport(TransportInterface $transport): self
+    {
+        $this->transport = $transport;
 
         return $this;
     }
 
     public function withNullSerializer(): self
     {
-        $this->serializer = new NullSerializer();
-
-        return $this;
+        return $this->withSerializer(new NullSerializer());
     }
 
     /**
@@ -98,7 +86,12 @@ final class EdiClientFactory
         string $elementDelimiter,
         string $segmentDelimiter,
     ): self {
-        $this->serializer = new AnsiX12Serializer($releases, $elementDelimiter, $segmentDelimiter);
+        return $this->withSerializer(new AnsiX12Serializer($releases, $elementDelimiter, $segmentDelimiter));
+    }
+
+    public function withSerializer(SerializerInterface $serializer): self
+    {
+        $this->serializer = $serializer;
 
         return $this;
     }

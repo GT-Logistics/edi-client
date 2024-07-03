@@ -33,7 +33,8 @@
         "friendsofphp/php-cs-fixer": "^3.59"
     },
     "suggest": {
-        "ext-ftp": "To allow reading and write EDIs throught FTP",
+        "ext-ftp": "To allow reading and write EDIs throught FTP(S)",
+        "ext-ssh2": "To allow reading and write EDIs throught SFTP",
         "gtlogistics/edi-x12": "To allow reading and write ANSI X12 EDIs"
     },
     "extra": {

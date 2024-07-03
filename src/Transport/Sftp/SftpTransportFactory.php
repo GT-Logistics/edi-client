@@ -35,31 +35,29 @@ class SftpTransportFactory
 
     public function __construct()
     {
+        if (!extension_loaded('ssh2')) {
+            throw new \RuntimeException('You must have the SSH2 extension for PHP, please enable it in the php.ini file');
+        }
+
         $this->withAnonymousAuthentication();
     }
 
     public function withAnonymousAuthentication(): self
     {
-        $this->authenticator = new SftpAnonymousAuthenticator();
-
-        return $this;
+        return $this->withAuthentication(new SftpAnonymousAuthenticator());
     }
 
     public function withNoneAuthentication(string $username): self
     {
-        $this->authenticator = new SftpNoneAuthenticator($username);
-
-        return $this;
+        return $this->withAuthentication($this->authenticator = new SftpNoneAuthenticator($username));
     }
 
     public function withPasswordAuthentication(string $username, string $password): self
     {
-        $this->authenticator = new SftpPasswordAuthenticator($username, $password);
-
-        return $this;
+        return $this->withAuthentication(new SftpPasswordAuthenticator($username, $password));
     }
 
-    public function withCustomAuthentication(SftpAuthenticatorInterface $authenticator): self
+    public function withAuthentication(SftpAuthenticatorInterface $authenticator): self
     {
         $this->authenticator = $authenticator;
 
@@ -72,10 +70,6 @@ class SftpTransportFactory
         string $inputDir,
         string $outputDir,
     ): TransportInterface {
-        if (!extension_loaded('ssh2')) {
-            throw new \RuntimeException('You must have the SSH2 extension for PHP, please enable it in the php.ini file');
-        }
-
         return new LazyTransport(fn () => $this->buildTransport($host, $port, $inputDir, $outputDir));
     }
 

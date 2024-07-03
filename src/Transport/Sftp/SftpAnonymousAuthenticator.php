@@ -49,8 +49,8 @@ final class SftpAnonymousAuthenticator implements SftpAuthenticatorInterface
         $this->delegated = new SftpNoneAuthenticator('anonymous');
     }
 
-    public function authenticate($sshConnection): void
+    public function authenticate($connection): void
     {
-        $this->delegated->authenticate($sshConnection);
+        $this->delegated->authenticate($connection);
     }
 }

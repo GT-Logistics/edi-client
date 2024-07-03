@@ -26,8 +26,8 @@ use Gtlogistics\EdiClient\Bridge\Laravel\EdiClientServiceProvider;
 use Gtlogistics\EdiClient\EdiClient;
 use Gtlogistics\EdiClient\Serializer\AnsiX12Serializer;
 use Gtlogistics\EdiClient\Serializer\SerializerInterface;
-use Gtlogistics\EdiClient\Transport\FtpTransport;
-use Gtlogistics\EdiClient\Transport\FtpTransportFactory;
+use Gtlogistics\EdiClient\Transport\Ftp\FtpTransport;
+use Gtlogistics\EdiClient\Transport\Ftp\FtpTransportFactory;
 use Gtlogistics\EdiClient\Transport\TransportInterface;
 use Orchestra\Testbench\TestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -44,9 +44,13 @@ class EdiClientServiceProviderTest extends TestCase
 
     public function testDefaultRegister(): void
     {
-        $this->mock(FtpTransportFactory::class)
-            ->expects('build')->once()
-            ->withArgs(['example.org', 2121, 'user', 'pass', '/to', '/from', false])
+        $mock = $this->mock(FtpTransportFactory::class);
+        $mock->expects('withPasswordAuthentication')->once()
+            ->withArgs(['user', 'pass'])
+            ->andReturnSelf()
+        ;
+        $mock->expects('build')->once()
+            ->withArgs(['example.org', 2121, '/to', '/from', false])
             ->andReturn($this->mock(FtpTransport::class))
         ;
 

@@ -20,39 +20,60 @@
 
 declare(strict_types=1);
 
-namespace Gtlogistics\EdiClient\Transport;
+namespace Gtlogistics\EdiClient\Transport\Ftp;
 
 use Gtlogistics\EdiClient\Exception\TransportException;
+use Gtlogistics\EdiClient\Transport\LazyTransport;
+use Gtlogistics\EdiClient\Transport\TransportInterface;
 use Safe\Exceptions\FtpException;
 
 use function Safe\ftp_connect;
-use function Safe\ftp_login;
 use function Safe\ftp_pasv;
 use function Safe\ftp_ssl_connect;
 
 class FtpTransportFactory
 {
-    public function build(
-        string $host,
-        int $port,
-        string $username,
-        string $password,
-        string $inputDir,
-        string $outputDir,
-        bool $useSsl = false,
-    ): TransportInterface {
+    private FtpAuthenticatorInterface $authenticator;
+
+    public function __construct()
+    {
         if (!extension_loaded('ftp')) {
             throw new \RuntimeException('You must have the FTP extension for PHP, please enable it in the php.ini file');
         }
 
-        return new LazyTransport(fn () => $this->buildTransport($host, $port, $username, $password, $inputDir, $outputDir, $useSsl));
+        $this->withAnonymousAuthentication();
+    }
+
+    public function withAnonymousAuthentication(): self
+    {
+        return $this->withAuthenticator(new FtpAnonymousAuthenticator());
+    }
+
+    public function withPasswordAuthentication(string $username, string $password): self
+    {
+        return $this->withAuthenticator(new FtpPasswordAuthenticator($username, $password));
+    }
+
+    public function withAuthenticator(FtpAuthenticatorInterface $authenticator): self
+    {
+        $this->authenticator = $authenticator;
+
+        return $this;
+    }
+
+    public function build(
+        string $host,
+        int $port,
+        string $inputDir,
+        string $outputDir,
+        bool $useSsl = false,
+    ): TransportInterface {
+        return new LazyTransport(fn () => $this->buildTransport($host, $port, $inputDir, $outputDir, $useSsl));
     }
 
     private function buildTransport(
         string $host,
         int $port,
-        string $username,
-        string $password,
         string $inputDir,
         string $outputDir,
         bool $useSsl = false,
@@ -60,7 +81,7 @@ class FtpTransportFactory
         try {
             $connection = !$useSsl ? ftp_connect($host, $port) : ftp_ssl_connect($host, $port);
 
-            ftp_login($connection, $username, $password);
+            $this->authenticator->authenticate($connection);
             ftp_pasv($connection, true);
 
             return new FtpTransport(
