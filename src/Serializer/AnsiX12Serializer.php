@@ -22,10 +22,10 @@ declare(strict_types=1);
 
 namespace Gtlogistics\EdiClient\Serializer;
 
-use Gtlogistics\X12Parser\Edi;
-use Gtlogistics\X12Parser\Model\ReleaseInterface;
-use Gtlogistics\X12Parser\Parser\X12Parser;
-use Gtlogistics\X12Parser\Serializer\X12Serializer;
+use Gtlogistics\EdiX12\Edi;
+use Gtlogistics\EdiX12\Model\ReleaseInterface;
+use Gtlogistics\EdiX12\Parser\X12Parser;
+use Gtlogistics\EdiX12\Serializer\X12Serializer;
 use Webmozart\Assert\Assert;
 
 /**

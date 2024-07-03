@@ -30,7 +30,7 @@ use Gtlogistics\EdiClient\Serializer\SerializerInterface;
 use Gtlogistics\EdiClient\Transport\FtpTransportFactory;
 use Gtlogistics\EdiClient\Transport\NullTransport;
 use Gtlogistics\EdiClient\Transport\TransportInterface;
-use Gtlogistics\X12Parser\Model\ReleaseInterface;
+use Gtlogistics\EdiX12\Model\ReleaseInterface;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 use Webmozart\Assert\Assert;
