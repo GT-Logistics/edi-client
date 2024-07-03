@@ -20,48 +20,64 @@
 
 declare(strict_types=1);
 
-namespace Gtlogistics\EdiClient\Transport;
+namespace Gtlogistics\EdiClient\Transport\Sftp;
 
-use FTP\Connection;
 use Gtlogistics\EdiClient\Exception\TransportException;
+use Gtlogistics\EdiClient\Transport\TransportInterface;
+use Gtlogistics\EdiClient\Utils\CustomAssert;
 use Gtlogistics\EdiClient\Utils\PathUtils;
+use Safe\Exceptions\DirException;
 use Safe\Exceptions\FilesystemException;
-use Safe\Exceptions\FtpException;
-use Safe\Exceptions\StreamException;
+use Safe\Exceptions\Ssh2Exception;
 use Webmozart\Assert\Assert;
 
-use function Safe\fopen;
-use function Safe\ftp_close;
-use function Safe\ftp_fget;
-use function Safe\ftp_fput;
-use function Safe\ftp_nlist;
-use function Safe\fwrite;
-use function Safe\stream_get_contents;
+use function Safe\file_get_contents;
+use function Safe\file_put_contents;
+use function Safe\opendir;
+use function Safe\ssh2_disconnect;
+use function Safe\ssh2_sftp;
 
-class FtpTransport implements TransportInterface
+class SftpTransport implements TransportInterface
 {
-    private ?Connection $connection;
+    /**
+     * @var resource|null
+     */
+    private $sshConnection;
+
+    /**
+     * @var resource|null
+     */
+    private $sftpConnection;
 
     private string $inputDir;
 
     private string $outputDir;
 
+    /**
+     * @param resource $connection
+     */
     public function __construct(
-        Connection $connection,
+        $connection,
         string $inputDir,
         string $outputDir,
     ) {
-        $this->connection = $connection;
+        CustomAssert::ssh2Resource($connection);
+
+        $this->sshConnection = $connection;
+        $this->sftpConnection = ssh2_sftp($connection);
         $this->inputDir = PathUtils::normalizeDirPath($inputDir);
         $this->outputDir = PathUtils::normalizeDirPath($outputDir);
     }
 
     public function getFileNames(): array
     {
-        Assert::notNull($this->connection);
+        Assert::notNull($this->sshConnection);
+        Assert::notNull($this->sftpConnection);
         try {
             $files = [];
-            foreach (ftp_nlist($this->connection, $this->inputDir) as $file) {
+
+            $directory = opendir("ssh2.sftp://$this->sftpConnection/$this->inputDir");
+            while (($file = readdir($directory)) !== false) {
                 $file = PathUtils::normalizeFilePath($this->inputDir, $file);
                 if (in_array($file, ['.', '..'])) {
                     continue;
@@ -69,53 +85,53 @@ class FtpTransport implements TransportInterface
 
                 $files[] = $file;
             }
+            closedir($directory);
 
             return $files;
-        } catch (FtpException $e) {
+        } catch (DirException $e) {
             throw new TransportException("Could not list files from folder $this->inputDir", 0, $e);
         }
     }
 
     public function getFileContents(string $filename): string
     {
-        Assert::notNull($this->connection);
+        Assert::notNull($this->sshConnection);
+        Assert::notNull($this->sftpConnection);
         try {
-            $stream = fopen('php://memory', 'rb+');
-
-            ftp_fget($this->connection, $stream, $this->inputDir . $filename);
-            fseek($stream, 0);
-
-            return stream_get_contents($stream);
-        } catch (FtpException|FilesystemException|StreamException $e) {
+            return file_get_contents("ssh2.sftp://$this->sftpConnection/$filename");
+        } catch (FilesystemException $e) {
             throw new TransportException("Could not read file $filename", 0, $e);
         }
     }
 
     public function putFileContents(string $filename, string $data): void
     {
-        Assert::notNull($this->connection);
+        Assert::notNull($this->sshConnection);
+        Assert::notNull($this->sftpConnection);
         try {
-            $stream = fopen('php://memory', 'rb+');
-
-            fwrite($stream, $data);
-            fseek($stream, 0);
-
-            ftp_fput($this->connection, $this->outputDir . $filename, $stream);
-        } catch (FtpException|FilesystemException $e) {
+            file_put_contents("ssh2.sftp://$this->sftpConnection/$filename", $data);
+        } catch (FilesystemException $e) {
             throw new TransportException("Could not write the file $filename in the folder $this->outputDir, check if exists", 0, $e);
         }
     }
 
     public function __destruct()
     {
-        if ($this->connection === null) {
-            return;
-        }
+        if ($this->sftpConnection !== null) {
+            try {
+                ssh2_disconnect($this->sftpConnection);
+            } catch (Ssh2Exception) {
+            }
 
-        try {
-            ftp_close($this->connection);
-        } catch (FtpException) {
+            $this->sftpConnection = null;
         }
-        $this->connection = null;
+        if ($this->sshConnection !== null) {
+            try {
+                ssh2_disconnect($this->sshConnection);
+            } catch (Ssh2Exception) {
+            }
+
+            $this->sshConnection = null;
+        }
     }
 }
