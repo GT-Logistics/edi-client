@@ -1,6 +1,5 @@
 vendor/
 composer.lock
 phpunit.xml
+.ecs.cache
 .phpunit.cache
-.php-cs-fixer.php
-.php-cs-fixer.cache

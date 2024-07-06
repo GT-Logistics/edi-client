@@ -30,7 +30,7 @@
         "phpstan/phpstan": "^1.11.5",
         "thecodingmachine/phpstan-safe-rule": "^v1.2.0",
         "gtlogistics/edi-x12": "dev-main",
-        "friendsofphp/php-cs-fixer": "^3.59"
+        "gtlogistics/code-style": "^0.0.2"
     },
     "suggest": {
         "ext-ftp": "To allow reading and write EDIs throught FTP(S)",

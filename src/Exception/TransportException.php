@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /*
  * Copyright (C) 2024 GT+ Logistics.
  *
@@ -17,8 +20,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
  * USA
  */
-
-declare(strict_types=1);
 
 namespace Gtlogistics\EdiClient\Exception;
 
