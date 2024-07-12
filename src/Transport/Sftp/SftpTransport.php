@@ -25,7 +25,6 @@ namespace Gtlogistics\EdiClient\Transport\Sftp;
 
 use Gtlogistics\EdiClient\Exception\TransportException;
 use Gtlogistics\EdiClient\Transport\TransportInterface;
-use Gtlogistics\EdiClient\Utils\CustomAssert;
 use Gtlogistics\EdiClient\Utils\PathUtils;
 use Safe\Exceptions\DirException;
 use Safe\Exceptions\FilesystemException;
@@ -62,7 +61,7 @@ class SftpTransport implements TransportInterface
         string $inputDir,
         string $outputDir,
     ) {
-        CustomAssert::ssh2Resource($connection);
+        Assert::resource($connection);
 
         $this->sshConnection = $connection;
         $this->sftpConnection = ssh2_sftp($connection);

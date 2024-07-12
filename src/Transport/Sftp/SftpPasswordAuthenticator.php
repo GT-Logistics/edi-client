@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace Gtlogistics\EdiClient\Transport\Sftp;
 
-use Gtlogistics\EdiClient\Utils\CustomAssert;
+use Webmozart\Assert\Assert;
 
 use function Safe\ssh2_auth_password;
 
@@ -37,7 +37,7 @@ final class SftpPasswordAuthenticator implements SftpAuthenticatorInterface
 
     public function authenticate($connection): void
     {
-        CustomAssert::ssh2Resource($connection);
+        Assert::resource($connection);
 
         ssh2_auth_password($connection, $this->username, $this->password);
     }

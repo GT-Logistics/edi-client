@@ -23,8 +23,8 @@ declare(strict_types=1);
 
 namespace Gtlogistics\EdiClient\Transport\Sftp;
 
-use Gtlogistics\EdiClient\Utils\CustomAssert;
 use Safe\Exceptions\Ssh2Exception;
+use Webmozart\Assert\Assert;
 
 final class SftpNoneAuthenticator implements SftpAuthenticatorInterface
 {
@@ -35,7 +35,7 @@ final class SftpNoneAuthenticator implements SftpAuthenticatorInterface
 
     public function authenticate($connection): void
     {
-        CustomAssert::ssh2Resource($connection);
+        Assert::resource($connection);
 
         if (($result = ssh2_auth_none($connection, $this->username)) !== true) {
             throw new Ssh2Exception(sprintf('None authentication for user %s failed, available authentications: %s', $this->username, implode(', ', $result)));

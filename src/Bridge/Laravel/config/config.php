@@ -14,7 +14,7 @@ return [
     ],
     'sftp' => [
         'host' => env('EDI_SFTP_HOST', ''),
-        'port' => (int) env('EDI_SFTP_PORT', 21),
+        'port' => (int) env('EDI_SFTP_PORT', 22),
         'username' => env('EDI_SFTP_USERNAME', ''),
         'password' => env('EDI_SFTP_PASSWORD', ''),
         'input_dir' => env('EDI_SFTP_INPUT_DIR', ''),
