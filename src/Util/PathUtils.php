@@ -21,17 +21,22 @@ declare(strict_types=1);
  * USA
  */
 
-namespace Gtlogistics\EdiClient\Utils;
+namespace Gtlogistics\EdiClient\Util;
 
+/**
+ * @internal
+ */
 final class PathUtils
 {
     public static function normalizeDirPath(string $dirPath): string
     {
-        return rtrim($dirPath, '/\\') . '/';
+        return rtrim($dirPath, '/') . '/';
     }
 
     public static function normalizeFilePath(string $inputDir, string $filePath): string
     {
-        return str_replace($inputDir, '', $filePath);
+        $dirPath = self::normalizeDirPath($inputDir);
+
+        return str_replace($dirPath, '', $filePath);
     }
 }

@@ -25,7 +25,7 @@ namespace Gtlogistics\EdiClient\Transport\Sftp;
 
 use Gtlogistics\EdiClient\Exception\TransportException;
 use Gtlogistics\EdiClient\Transport\TransportInterface;
-use Gtlogistics\EdiClient\Utils\PathUtils;
+use Gtlogistics\EdiClient\Util\PathUtils;
 use Safe\Exceptions\DirException;
 use Safe\Exceptions\FilesystemException;
 use Safe\Exceptions\Ssh2Exception;

@@ -27,14 +27,16 @@ use Gtlogistics\EdiClient\Bridge\Laravel\EdiClientServiceProvider;
 use Gtlogistics\EdiClient\EdiClient;
 use Gtlogistics\EdiClient\Serializer\AnsiX12Serializer;
 use Gtlogistics\EdiClient\Serializer\SerializerInterface;
-use Gtlogistics\EdiClient\Transport\Ftp\FtpTransport;
-use Gtlogistics\EdiClient\Transport\Ftp\FtpTransportFactory;
 use Gtlogistics\EdiClient\Transport\LazyTransport;
 use Gtlogistics\EdiClient\Transport\TransportInterface;
 use Orchestra\Testbench\TestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
 
 #[CoversClass(EdiClientServiceProvider::class)]
+#[UsesClass(EdiClient::class)]
+#[UsesClass(AnsiX12Serializer::class)]
+#[UsesClass(LazyTransport::class)]
 class EdiClientServiceProviderTest extends TestCase
 {
     protected function getPackageProviders($app): array

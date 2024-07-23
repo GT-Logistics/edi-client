@@ -29,6 +29,9 @@
          failOnRisky="true"
          failOnWarning="true">
   <testsuites>
+    <testsuite name="Unit">
+      <directory>test/Unit</directory>
+    </testsuite>
     <testsuite name="Feature">
       <directory>test/Feature</directory>
     </testsuite>
@@ -39,13 +42,4 @@
       <directory>src</directory>
     </include>
   </source>
-
-  <php>
-    <env name="EDI_FTP_HOST" value="example.org"/>
-    <env name="EDI_FTP_PORT" value="2121"/>
-    <env name="EDI_FTP_USERNAME" value="user"/>
-    <env name="EDI_FTP_PASSWORD" value="pass"/>
-    <env name="EDI_FTP_INPUT_DIR" value="/to"/>
-    <env name="EDI_FTP_OUTPUT_DIR" value="/from"/>
-  </php>
 </phpunit>
