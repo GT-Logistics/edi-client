@@ -1,8 +1,8 @@
 <?php
 
 return [
-    'transport' => 'ftp',
-    'standard' => 'x12',
+    'transport' => env('EDI_TRANSPORT', 'ftp'),
+    'standard' => env('EDI_STANDARD', 'x12'),
     'ftp' => [
         'host' => env('EDI_FTP_HOST', ''),
         'port' => (int) env('EDI_FTP_PORT', 21),
