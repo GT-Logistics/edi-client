@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /*
  * Copyright (C) 2024 GT+ Logistics.
  *
@@ -21,9 +19,27 @@ declare(strict_types=1);
  * USA
  */
 
-namespace Gtlogistics\EdiClient\Transport\Ftp;
+namespace Gtlogistics\EdiClient\Test\Unit\Transport\Ftp;
 
-interface FtpAuthenticatorInterface
+use Gtlogistics\EdiClient\Transport\Ftp\FtpConnection;
+use Gtlogistics\EdiClient\Transport\Ftp\FtpPasswordAuthenticator;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\TestCase;
+
+#[CoversClass(FtpPasswordAuthenticator::class)]
+#[UsesClass(FtpConnection::class)]
+class FtpPasswordAuthenticatorTest extends TestCase
 {
-    public function authenticate(FtpConnection $connection): void;
+    public function testAuthenticate(): void
+    {
+        $mock = $this->createMock(FtpConnection::class);
+        $mock->expects($this->once())
+            ->method('login')
+            ->with('test', '1234')
+        ;
+
+        $authenticator = new FtpPasswordAuthenticator('test', '1234');
+        $authenticator->authenticate($mock);
+    }
 }

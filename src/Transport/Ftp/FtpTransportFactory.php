@@ -28,10 +28,6 @@ use Gtlogistics\EdiClient\Transport\LazyTransport;
 use Gtlogistics\EdiClient\Transport\TransportInterface;
 use Safe\Exceptions\FtpException;
 
-use function Safe\ftp_connect;
-use function Safe\ftp_pasv;
-use function Safe\ftp_ssl_connect;
-
 class FtpTransportFactory
 {
     private FtpAuthenticatorInterface $authenticator;
@@ -100,12 +96,9 @@ class FtpTransportFactory
         bool $useSsl = false,
     ): TransportInterface {
         try {
-            $connection = !$useSsl ? ftp_connect($host, $port) : ftp_ssl_connect($host, $port);
+            $connection = new FtpConnection($host, $port, $useSsl);
             $this->authenticator->authenticate($connection);
-
-            if ($this->passive) {
-                ftp_pasv($connection, true);
-            }
+            $connection->pasv($this->passive);
 
             return new FtpTransport(
                 $connection,

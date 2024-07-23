@@ -23,18 +23,16 @@ declare(strict_types=1);
 
 namespace Gtlogistics\EdiClient\Transport\Ftp;
 
-use FTP\Connection;
-
 final class FtpAnonymousAuthenticator implements FtpAuthenticatorInterface
 {
     private FtpPasswordAuthenticator $delegated;
 
-    public function __construct(
-    ) {
+    public function __construct()
+    {
         $this->delegated = new FtpPasswordAuthenticator('anonymous', 'guest');
     }
 
-    public function authenticate(Connection $connection): void
+    public function authenticate(FtpConnection $connection): void
     {
         $this->delegated->authenticate($connection);
     }

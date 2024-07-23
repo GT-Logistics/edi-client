@@ -23,33 +23,27 @@ declare(strict_types=1);
 
 namespace Gtlogistics\EdiClient\Transport\Ftp;
 
-use FTP\Connection;
 use Gtlogistics\EdiClient\Exception\TransportException;
 use Gtlogistics\EdiClient\Transport\TransportInterface;
-use Gtlogistics\EdiClient\Utils\PathUtils;
+use Gtlogistics\EdiClient\Util\PathUtils;
 use Safe\Exceptions\FilesystemException;
 use Safe\Exceptions\FtpException;
 use Safe\Exceptions\StreamException;
-use Webmozart\Assert\Assert;
 
 use function Safe\fopen;
-use function Safe\ftp_close;
-use function Safe\ftp_fget;
-use function Safe\ftp_fput;
-use function Safe\ftp_nlist;
 use function Safe\fwrite;
 use function Safe\stream_get_contents;
 
 class FtpTransport implements TransportInterface
 {
-    private ?Connection $connection;
+    private FtpConnection $connection;
 
     private string $inputDir;
 
     private string $outputDir;
 
     public function __construct(
-        Connection $connection,
+        FtpConnection $connection,
         string $inputDir,
         string $outputDir,
     ) {
@@ -60,10 +54,9 @@ class FtpTransport implements TransportInterface
 
     public function getFileNames(): array
     {
-        Assert::notNull($this->connection);
         try {
             $files = [];
-            foreach (ftp_nlist($this->connection, $this->inputDir) as $file) {
+            foreach ($this->connection->nlist($this->inputDir) as $file) {
                 $file = PathUtils::normalizeFilePath($this->inputDir, $file);
                 if (in_array($file, ['.', '..'])) {
                     continue;
@@ -80,11 +73,10 @@ class FtpTransport implements TransportInterface
 
     public function getFileContents(string $filename): string
     {
-        Assert::notNull($this->connection);
         try {
             $stream = fopen('php://memory', 'rb+');
 
-            ftp_fget($this->connection, $stream, $this->inputDir . $filename);
+            $this->connection->fget($stream, $this->inputDir . $filename);
             fseek($stream, 0);
 
             return stream_get_contents($stream);
@@ -95,29 +87,15 @@ class FtpTransport implements TransportInterface
 
     public function putFileContents(string $filename, string $data): void
     {
-        Assert::notNull($this->connection);
         try {
             $stream = fopen('php://memory', 'rb+');
 
             fwrite($stream, $data);
             fseek($stream, 0);
 
-            ftp_fput($this->connection, $this->outputDir . $filename, $stream);
+            $this->connection->fput($this->outputDir . $filename, $stream);
         } catch (FtpException|FilesystemException $e) {
             throw new TransportException("Could not write the file $filename in the folder $this->outputDir, check if exists", 0, $e);
         }
-    }
-
-    public function __destruct()
-    {
-        if ($this->connection === null) {
-            return;
-        }
-
-        try {
-            ftp_close($this->connection);
-        } catch (FtpException) {
-        }
-        $this->connection = null;
     }
 }

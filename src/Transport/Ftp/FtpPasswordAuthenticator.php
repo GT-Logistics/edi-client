@@ -23,10 +23,6 @@ declare(strict_types=1);
 
 namespace Gtlogistics\EdiClient\Transport\Ftp;
 
-use FTP\Connection;
-
-use function Safe\ftp_login;
-
 final class FtpPasswordAuthenticator implements FtpAuthenticatorInterface
 {
     public function __construct(
@@ -35,8 +31,8 @@ final class FtpPasswordAuthenticator implements FtpAuthenticatorInterface
     ) {
     }
 
-    public function authenticate(Connection $connection): void
+    public function authenticate(FtpConnection $connection): void
     {
-        ftp_login($connection, $this->username, $this->password);
+        $connection->login($this->username, $this->password);
     }
 }
