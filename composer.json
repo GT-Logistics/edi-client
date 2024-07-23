@@ -30,7 +30,8 @@
         "phpstan/phpstan": "^1.11.5",
         "thecodingmachine/phpstan-safe-rule": "^v1.2.0",
         "gtlogistics/edi-x12": "dev-main",
-        "gtlogistics/code-style": "^0.0.2"
+        "gtlogistics/code-style": "^0.0.2",
+        "infection/infection": "^0.29.6"
     },
     "suggest": {
         "ext-ftp": "To allow reading and write EDIs throught FTP(S)",
@@ -42,6 +43,11 @@
             "providers": [
                 "Gtlogistics\\EdiClient\\Bridge\\Laravel\\EdiClientServiceProvider"
             ]
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "infection/extension-installer": true
         }
     }
 }

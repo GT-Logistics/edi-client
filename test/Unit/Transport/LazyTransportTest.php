@@ -29,6 +29,25 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(LazyTransport::class)]
 class LazyTransportTest extends TestCase
 {
+    public function testOnlyOneInvocation(): void
+    {
+        $mockTransport = $this->createMock(TransportInterface::class);
+        $mockTransport->expects($this->exactly(3))
+            ->method('putFileContents')
+        ;
+
+        $mockFactory = $this->createMock(StubFactory::class);
+        $mockFactory->expects($this->once())
+            ->method('__invoke')
+            ->willReturn($mockTransport)
+        ;
+
+        $transport = new LazyTransport($mockFactory(...));
+        $transport->putFileContents('test1.edi', 'Test');
+        $transport->putFileContents('test2.edi', 'Test');
+        $transport->putFileContents('test3.edi', 'Test');
+    }
+
     public function testGetFileNames(): void
     {
         $mockTransport = $this->createMock(TransportInterface::class);
@@ -70,5 +89,12 @@ class LazyTransportTest extends TestCase
 
         $transport = new LazyTransport(static fn () => $mockTransport);
         $transport->putFileContents('test1.edi', 'Test');
+    }
+}
+
+class StubFactory
+{
+    public function __invoke()
+    {
     }
 }

@@ -38,6 +38,9 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 use Webmozart\Assert\Assert;
 
+/**
+ * @infection-ignore-all
+ */
 final class EdiClientServiceProvider extends ServiceProvider
 {
     /**
@@ -47,7 +50,7 @@ final class EdiClientServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__ . '/config/config.php' => config_path('edi.php'),
+                __DIR__ . '/../../../config/laravel.php' => config_path('edi.php'),
             ], 'config');
         }
     }
@@ -58,7 +61,7 @@ final class EdiClientServiceProvider extends ServiceProvider
     public function register(): void
     {
         // Automatically apply the package configuration
-        $this->mergeConfigFrom(__DIR__ . '/config/config.php', 'edi');
+        $this->mergeConfigFrom(__DIR__ . '/../../../config/laravel.php', 'edi');
 
         // Register transports
         $this->app->singleton(FtpTransportFactory::class);
