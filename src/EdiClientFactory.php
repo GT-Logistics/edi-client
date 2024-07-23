@@ -28,34 +28,49 @@ use Gtlogistics\EdiClient\Serializer\NullSerializer;
 use Gtlogistics\EdiClient\Serializer\SerializerInterface;
 use Gtlogistics\EdiClient\Transport\NullTransport;
 use Gtlogistics\EdiClient\Transport\TransportInterface;
+use Gtlogistics\EdiX12\Edi;
 use Gtlogistics\EdiX12\Model\ReleaseInterface;
 
+/**
+ * @template T
+ */
 final class EdiClientFactory
 {
     private TransportInterface $transport;
 
+    /**
+     * @var SerializerInterface<T>
+     */
     private SerializerInterface $serializer;
 
     public function __construct()
     {
-        $this
-            ->withNullTransport()
-            ->withNullSerializer()
-        ;
+        $this->transport = new NullTransport();
+        $this->serializer = new NullSerializer();
     }
 
+    /**
+     * @return EdiClientFactory<T>
+     */
     public function withNullTransport(): self
     {
         return $this->withTransport(new NullTransport());
     }
 
+    /**
+     * @return EdiClientFactory<T>
+     */
     public function withTransport(TransportInterface $transport): self
     {
-        $this->transport = $transport;
+        $cloned = clone $this;
+        $cloned->transport = $transport;
 
-        return $this;
+        return $cloned;
     }
 
+    /**
+     * @return EdiClientFactory<mixed>
+     */
     public function withNullSerializer(): self
     {
         return $this->withSerializer(new NullSerializer());
@@ -63,6 +78,8 @@ final class EdiClientFactory
 
     /**
      * @param ReleaseInterface[] $releases
+     *
+     * @return EdiClientFactory<Edi>
      */
     public function withX12Serializer(
         array $releases,
@@ -72,13 +89,25 @@ final class EdiClientFactory
         return $this->withSerializer(new AnsiX12Serializer($releases, $elementDelimiter, $segmentDelimiter));
     }
 
+    /**
+     * @template TSerialize
+     *
+     * @param SerializerInterface<TSerialize> $serializer
+     *
+     * @return EdiClientFactory<TSerialize>
+     */
     public function withSerializer(SerializerInterface $serializer): self
     {
-        $this->serializer = $serializer;
+        /** @var EdiClientFactory<TSerialize> $cloned */
+        $cloned = clone $this;
+        $cloned->serializer = $serializer;
 
-        return $this;
+        return $cloned;
     }
 
+    /**
+     * @return EdiClient<T>
+     */
     public function build(): EdiClient
     {
         return new EdiClient($this->transport, $this->serializer);

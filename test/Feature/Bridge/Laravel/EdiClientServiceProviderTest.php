@@ -29,6 +29,7 @@ use Gtlogistics\EdiClient\Serializer\AnsiX12Serializer;
 use Gtlogistics\EdiClient\Serializer\SerializerInterface;
 use Gtlogistics\EdiClient\Transport\Ftp\FtpTransport;
 use Gtlogistics\EdiClient\Transport\Ftp\FtpTransportFactory;
+use Gtlogistics\EdiClient\Transport\LazyTransport;
 use Gtlogistics\EdiClient\Transport\TransportInterface;
 use Orchestra\Testbench\TestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -45,18 +46,8 @@ class EdiClientServiceProviderTest extends TestCase
 
     public function testDefaultRegister(): void
     {
-        $mock = $this->mock(FtpTransportFactory::class);
-        $mock->expects('withPasswordAuthentication')->once()
-            ->withArgs(['user', 'pass'])
-            ->andReturnSelf()
-        ;
-        $mock->expects('build')->once()
-            ->withArgs(['example.org', 2121, '/to', '/from', false])
-            ->andReturn($this->mock(FtpTransport::class))
-        ;
-
         $transport = $this->app->make(TransportInterface::class);
-        self::assertInstanceOf(FtpTransport::class, $transport);
+        self::assertInstanceOf(LazyTransport::class, $transport);
 
         $serializer = $this->app->make(SerializerInterface::class);
         self::assertInstanceOf(AnsiX12Serializer::class, $serializer);

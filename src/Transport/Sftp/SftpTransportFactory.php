@@ -40,7 +40,7 @@ class SftpTransportFactory
             throw new \RuntimeException('You must have the SSH2 extension for PHP, please enable it in the php.ini file');
         }
 
-        $this->withAnonymousAuthentication();
+        $this->authenticator = new SftpAnonymousAuthenticator();
     }
 
     public function withAnonymousAuthentication(): self
@@ -50,7 +50,7 @@ class SftpTransportFactory
 
     public function withNoneAuthentication(string $username): self
     {
-        return $this->withAuthentication($this->authenticator = new SftpNoneAuthenticator($username));
+        return $this->withAuthentication(new SftpNoneAuthenticator($username));
     }
 
     public function withPasswordAuthentication(string $username, string $password): self
@@ -60,9 +60,10 @@ class SftpTransportFactory
 
     public function withAuthentication(SftpAuthenticatorInterface $authenticator): self
     {
-        $this->authenticator = $authenticator;
+        $cloned = clone $this;
+        $cloned->authenticator = $authenticator;
 
-        return $this;
+        return $cloned;
     }
 
     public function build(

@@ -36,30 +36,50 @@ class FtpTransportFactory
 {
     private FtpAuthenticatorInterface $authenticator;
 
+    private bool $passive;
+
     public function __construct()
     {
         if (!extension_loaded('ftp')) {
             throw new \RuntimeException('You must have the FTP extension for PHP, please enable it in the php.ini file');
         }
 
-        $this->withAnonymousAuthentication();
+        $this->authenticator = new FtpAnonymousAuthenticator();
+        $this->passive = true;
     }
 
-    public function withAnonymousAuthentication(): self
+    public function withPassive(): static
+    {
+        $cloned = clone $this;
+        $cloned->passive = true;
+
+        return $cloned;
+    }
+
+    public function withActive(): static
+    {
+        $cloned = clone $this;
+        $cloned->passive = false;
+
+        return $cloned;
+    }
+
+    public function withAnonymousAuthentication(): static
     {
         return $this->withAuthenticator(new FtpAnonymousAuthenticator());
     }
 
-    public function withPasswordAuthentication(string $username, string $password): self
+    public function withPasswordAuthentication(string $username, string $password): static
     {
         return $this->withAuthenticator(new FtpPasswordAuthenticator($username, $password));
     }
 
-    public function withAuthenticator(FtpAuthenticatorInterface $authenticator): self
+    public function withAuthenticator(FtpAuthenticatorInterface $authenticator): static
     {
-        $this->authenticator = $authenticator;
+        $cloned = clone $this;
+        $cloned->authenticator = $authenticator;
 
-        return $this;
+        return $cloned;
     }
 
     public function build(
@@ -81,9 +101,11 @@ class FtpTransportFactory
     ): TransportInterface {
         try {
             $connection = !$useSsl ? ftp_connect($host, $port) : ftp_ssl_connect($host, $port);
-
             $this->authenticator->authenticate($connection);
-            ftp_pasv($connection, true);
+
+            if ($this->passive) {
+                ftp_pasv($connection, true);
+            }
 
             return new FtpTransport(
                 $connection,

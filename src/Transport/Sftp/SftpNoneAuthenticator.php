@@ -37,8 +37,15 @@ final class SftpNoneAuthenticator implements SftpAuthenticatorInterface
     {
         Assert::resource($connection);
 
-        if (($result = ssh2_auth_none($connection, $this->username)) !== true) {
+        $result = ssh2_auth_none($connection, $this->username);
+
+        if ($result === true) {
+            return;
+        }
+        if (is_array($result)) {
             throw new Ssh2Exception(sprintf('None authentication for user %s failed, available authentications: %s', $this->username, implode(', ', $result)));
         }
+
+        throw new Ssh2Exception(sprintf('None authentication for user %s failed', $this->username));
     }
 }

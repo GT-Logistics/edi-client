@@ -29,6 +29,7 @@ use Gtlogistics\EdiClient\Serializer\AnsiX12Serializer;
 use Gtlogistics\EdiClient\Serializer\NullSerializer;
 use Gtlogistics\EdiClient\Serializer\SerializerInterface;
 use Gtlogistics\EdiClient\Transport\Ftp\FtpTransportFactory;
+use Gtlogistics\EdiClient\Transport\LazyTransport;
 use Gtlogistics\EdiClient\Transport\NullTransport;
 use Gtlogistics\EdiClient\Transport\Sftp\SftpTransportFactory;
 use Gtlogistics\EdiClient\Transport\TransportInterface;
@@ -133,7 +134,7 @@ final class EdiClientServiceProvider extends ServiceProvider
             Assert::string($transport);
             Assert::inArray($transport, ['null', 'ftp', 'sftp']);
 
-            return $app->make("edi.transport.$transport");
+            return new LazyTransport(static fn () => $app->make("edi.transport.$transport"));
         });
         $this->app->singleton(SerializerInterface::class, static function (Application $app) {
             $standard = config('edi.standard');

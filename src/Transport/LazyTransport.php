@@ -27,6 +27,9 @@ class LazyTransport implements TransportInterface
 {
     private ?TransportInterface $implementation;
 
+    /**
+     * @param \Closure(): TransportInterface $factory
+     */
     public function __construct(
         private readonly \Closure $factory,
     ) {

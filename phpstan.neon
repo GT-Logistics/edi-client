@@ -7,3 +7,5 @@ parameters:
     excludePaths:
         analyse:
             - src/Bridge
+    stubFiles:
+        - stub/ftp.stub
