@@ -76,7 +76,7 @@ class SftpTransport implements TransportInterface
         try {
             $files = [];
 
-            $directory = opendir("ssh2.sftp://$this->sftpConnection/$this->inputDir");
+            $directory = opendir($this->createSftpUri($this->inputDir));
             while (($file = readdir($directory)) !== false) {
                 $file = PathUtils::normalizeFilePath($this->inputDir, $file);
                 if (in_array($file, ['.', '..'])) {
@@ -98,7 +98,7 @@ class SftpTransport implements TransportInterface
         Assert::notNull($this->sshConnection);
         Assert::notNull($this->sftpConnection);
         try {
-            return file_get_contents("ssh2.sftp://$this->sftpConnection/$filename");
+            return file_get_contents($this->createSftpUri($this->inputDir . $filename));
         } catch (FilesystemException $e) {
             throw new TransportException("Could not read file $filename", 0, $e);
         }
@@ -109,7 +109,7 @@ class SftpTransport implements TransportInterface
         Assert::notNull($this->sshConnection);
         Assert::notNull($this->sftpConnection);
         try {
-            file_put_contents("ssh2.sftp://$this->sftpConnection/$filename", $data);
+            file_put_contents($this->createSftpUri($this->outputDir . $filename), $data);
         } catch (FilesystemException $e) {
             throw new TransportException("Could not write the file $filename in the folder $this->outputDir, check if exists", 0, $e);
         }
@@ -133,5 +133,12 @@ class SftpTransport implements TransportInterface
 
             $this->sshConnection = null;
         }
+    }
+
+    private function createSftpUri(string $filename): string
+    {
+        $resource = (int) $this->sftpConnection;
+
+        return "ssh2.sftp://$resource$filename";
     }
 }

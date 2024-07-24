@@ -30,13 +30,13 @@ final class PathUtils
 {
     public static function normalizeDirPath(string $dirPath): string
     {
-        return rtrim($dirPath, '/') . '/';
+        return '/' . trim($dirPath, '/') . '/';
     }
 
     public static function normalizeFilePath(string $inputDir, string $filePath): string
     {
-        $dirPath = self::normalizeDirPath($inputDir);
+        $dirPath = trim($inputDir, '/');
 
-        return str_replace($dirPath, '', $filePath);
+        return trim(str_replace($dirPath, '', $filePath), '/');
     }
 }

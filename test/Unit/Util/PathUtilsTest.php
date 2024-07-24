@@ -29,18 +29,26 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(PathUtils::class)]
 class PathUtilsTest extends TestCase
 {
-    #[TestWith(['path/to/dir/', 'path/to/dir/'])]
-    #[TestWith(['path/to/dir/', 'path/to/dir'])]
-    #[TestWith(['path/', 'path/'])]
-    #[TestWith(['path/', 'path'])]
+    #[TestWith(['/path/to/dir/', 'path/to/dir/'])]
+    #[TestWith(['/path/to/dir/', '/path/to/dir/'])]
+    #[TestWith(['/path/to/dir/', '/path/to/dir'])]
+    #[TestWith(['/path/to/dir/', 'path/to/dir'])]
+    #[TestWith(['/path/', 'path/'])]
+    #[TestWith(['/path/', '/path/'])]
+    #[TestWith(['/path/', '/path'])]
+    #[TestWith(['/path/', 'path'])]
     public function testNormalizeDirPath(string $expected, string $path): void
     {
         $this->assertEquals($expected, PathUtils::normalizeDirPath($path));
     }
 
     #[TestWith(['test.edi', 'path/to/dir/', 'path/to/dir/test.edi'])]
+    #[TestWith(['test.edi', '/path/to/dir/', 'path/to/dir/test.edi'])]
+    #[TestWith(['test.edi', '/path/to/dir', 'path/to/dir/test.edi'])]
     #[TestWith(['test.edi', 'path/to/dir', 'path/to/dir/test.edi'])]
     #[TestWith(['dir/test.edi', 'path/', 'path/dir/test.edi'])]
+    #[TestWith(['dir/test.edi', '/path/', 'path/dir/test.edi'])]
+    #[TestWith(['dir/test.edi', '/path', 'path/dir/test.edi'])]
     #[TestWith(['dir/test.edi', 'path', 'path/dir/test.edi'])]
     public function testNormalizeFilePath(string $expected, string $path, string $filename): void
     {
