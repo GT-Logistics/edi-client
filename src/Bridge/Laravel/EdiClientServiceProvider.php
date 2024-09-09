@@ -135,7 +135,6 @@ final class EdiClientServiceProvider extends ServiceProvider
             $transport = config('edi.transport');
 
             Assert::string($transport);
-            Assert::inArray($transport, ['null', 'ftp', 'sftp']);
 
             return new LazyTransport(static fn () => $app->make("edi.transport.$transport"));
         });
@@ -143,7 +142,6 @@ final class EdiClientServiceProvider extends ServiceProvider
             $standard = config('edi.standard');
 
             Assert::string($standard);
-            Assert::inArray($standard, ['null', 'x12']);
 
             return $app->make("edi.serializer.$standard");
         });
