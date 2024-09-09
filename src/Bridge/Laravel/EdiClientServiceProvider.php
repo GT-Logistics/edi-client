@@ -133,13 +133,19 @@ final class EdiClientServiceProvider extends ServiceProvider
         // Register services
         $this->app->singleton(TransportInterface::class, static function (Application $app) {
             $transport = config('edi.transport');
+            if ($transport === null) {
+                $transport = 'null';
+            }
 
             Assert::string($transport);
 
-            return new LazyTransport(static fn () => $app->make("edi.transport.$transport"));
+            return $app->make("edi.transport.$transport");
         });
         $this->app->singleton(SerializerInterface::class, static function (Application $app) {
             $standard = config('edi.standard');
+            if ($standard === null) {
+                $standard = 'null';
+            }
 
             Assert::string($standard);
 
